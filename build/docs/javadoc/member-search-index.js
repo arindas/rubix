@@ -1,0 +1,1 @@
+memberSearchIndex = [{"p":"<Unnamed>","c":"App","l":"App()"},{"p":"rubix.structure","c":"Cube","l":"Cube()"},{"p":"<Unnamed>","c":"App","l":"getGreeting()"},{"p":"<Unnamed>","c":"App","l":"main(String[])","url":"main-java.lang.String:A-"}]
