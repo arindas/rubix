@@ -2,6 +2,7 @@ package rubix.structure;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
 
 class Face {
 
@@ -129,5 +130,14 @@ class Face {
 			
 		for(int i = 0; i < axes.length; i++)
 			definition.put(directions[i], axes[i]);
+
+		Collection<Edge> edges = perimeter.values();
+		for(Edge edge : edges) {
+			Face adjacentFace = edge.faces
+				.get(Direction.getReverse(normal));
+			edge.rotate(normal, nTurns);
+			edge.putFace(adjacentFace);
+			edge.putFace(this);
+		}
 	}
 }

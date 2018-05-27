@@ -75,11 +75,6 @@ class Edge {
 			block.rotate(normal, nTurns);
 			block = next;
 		} while(block != end);
-
-		for(Direction dir : Direction.DIRECTIONS) {
-			Face face = faces.get(dir);
-			if(face != null) putFace(face);
-		}
 	}
 
 	void putFace(Face face) {
