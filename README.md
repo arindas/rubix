@@ -15,7 +15,7 @@ Design a data structure for the representation of a Rubik's cube such that all m
 ## Solution:
 
 ### _Observations:_
-- #1. The Rubik's cube is made composed of smaller blocks.
+- #1. The Rubik's cube is composed of smaller blocks.
 - #2. There are certain invariants that are needed to be considered:
 	- The direction system for space in general.
 	- The relative position of adjacent faces on any block.
@@ -26,8 +26,8 @@ Design a data structure for the representation of a Rubik's cube such that all m
 	as it is not subject to any perturbations. When considered in conjunction to the
 	second point, it essentially means the following: 
 	In the event of rotation of cube, the face pointing in a particular direction is 
-	replaced by another face or alternatively the said face changes ot direction.
-	However the relative position of the faces remain the same. Let us consider
+	replaced by another face or alternatively the said face changes its direction.
+	However, the relative position of the faces remain the same. Let us consider
 	a horizontal clockwise rotation of a block. The following transformations take place:
 
 	|Face        | New direction|

@@ -6,9 +6,11 @@ import java.util.Collection;
 
 class Face {
 
+	public static final int N_SIDES = 4;
+
 	static class Block implements Cube.Block {
 		private Face parent;
-		private Map<Subaxis, Cube.Block> adjBlocks;
+		private Map<Subaxis, Cube.Block> adjBlocks = new HashMap<>();
 		
 		public Color getColor(Direction d)
 		{ return Color.getColor(parent.definition.get(d)); }
@@ -39,22 +41,30 @@ class Face {
 		}
 	} 
 
-	Direction normal;
-	Face.Block topLeft, bottomRight;
-	Map<Direction, Edge> perimeter;
-	Map<Direction, Subaxis> definition;
+	private Direction normal;
+	private Face.Block topLeft, topRight, bottomLeft, bottomRight;
+	private Map<Direction, Edge> perimeter;
+	private Map<Direction, Subaxis> definition = Direction.getDefaultDef();
 	
-	Face.Block getCorner(Direction direction) {
-		if(topLeft.getBlock(direction) != null)
+	/* returns the corner of the face from which 
+	   an edge along this direction would start */
+	private Face.Block getCorner(Direction direction) {
+		Direction[][] dirs = Face.getPlaneDirs(normal);
+		
+		if(dirs[X][POS] == direction)
 			return topLeft;
-		else if(bottomRight.getBlock(direction) != null)
+		else if(dirs[Y][NEG] == direction)
+			return topRight;
+		else if(dirs[X][NEG] == direction)
 			return bottomRight;
-		throw new RuntimeException("Given direction "+direction+
-		"is not along the perimeter of the face.");
+		else if(dirs[Y][POS] == direction)
+			return bottomLeft;
+		else throw new RuntimeException("Given direction " +
+			direction + "is not along the perimeter of the face.");
 	}
 	
-	private static final int X = 0, Y = 1, POS = 0, NEG = 1;
-	private static Direction[][] getPlaneDirs(Direction normal) {
+	static final int X = 0, Y = 1, POS = 0, NEG = 1;
+	static Direction[][] getPlaneDirs(Direction normal) {
 		Direction[] dirs = Direction.getPlane(normal);
 		
 		return new Direction[][]{
@@ -76,6 +86,7 @@ class Face {
 			
 			for(int j = 0; j < order; j++) {
 				currCP = new Face.Block();
+				currCP.joinParent(this);
 				currCP.putBlock(dirs[Y][POS], prevCP);
 				currCP.putBlock(dirs[X][NEG], flank);
 				if(flank != null) { 
@@ -90,17 +101,20 @@ class Face {
 				flank = currCP;
 			}
 			
-			if(prevCH == null)
-				topLeft = currCH;
+			if(prevCH == null) {
+				topLeft  = currCH;
+				topRight = currCP;
+			}
 			
 			prevCH = currCH;
 		}
 		
+		bottomLeft  = currCH;
 		bottomRight = currCP;
 	}
 	
 	Direction putEdge(Edge e) {
-		Direction d = e.direction;
+		Direction d = e.getDirection(normal);
 		Cube.Block faceBlock = getCorner(d);
 		Direction[][] dirs = Face.getPlaneDirs(d);
 		
@@ -130,14 +144,27 @@ class Face {
 			
 		for(int i = 0; i < axes.length; i++)
 			definition.put(directions[i], axes[i]);
-
-		Collection<Edge> edges = perimeter.values();
-		for(Edge edge : edges) {
-			Face adjacentFace = edge.faces
-				.get(Direction.getReverse(normal));
-			edge.rotate(normal, nTurns);
-			edge.putFace(adjacentFace);
-			edge.putFace(this);
+		
+		Edge[] edges    = new Edge[N_SIDES]; // edges of this face
+		Face[] adjFaces = new Face[N_SIDES]; // faces adjacent to this face
+		Edge[] normals  = new Edge[N_SIDES]; // edges normal to this face
+		
+		Direction inwardNorm = Direction.getReverse(normal);
+		
+		for(int i = 0; i < directions.length; i++) { 
+			edges[i] = perimeter.get(directions[i]);
+			edges[i].setNormal(normal);
+			adjFaces[i] = edges[i].getFace(inwardNorm);
+			normals[i] = edges[i].start.getEdge(inwardNorm);
+		}
+		
+		for(int i = 0; i < N_SIDES; i++) {
+			int next = (i + nTurns) % N_SIDES;
+			Face adjacentFace = adjFaces[next];
+			edges[i].rotate(normal, nTurns);
+			edges[i].putFace(adjacentFace);
+			edges[i].putFace(this); 
+			edges[i].start.putEdge(inwardNorm, normals[next]);
 		}
 	}
 }

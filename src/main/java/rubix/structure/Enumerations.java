@@ -1,5 +1,8 @@
 package rubix.structure;
 
+import java.util.Map;
+import java.util.HashMap;
+
 enum Direction { 
 	TOP, BOTTOM, RIGHT, LEFT, FRONT, REAR;
 	
@@ -22,6 +25,19 @@ enum Direction {
 		} i = i % 2 == 0 ? i + 1: i - 1;
 		return DIRECTIONS[i];
 	}
+	
+	static Map<Direction, Subaxis> getDefaultDef() {
+		Map<Direction, Subaxis> map = new HashMap<>();
+		map.put(RIGHT,  Subaxis.X_1);
+		map.put(FRONT,  Subaxis.Y_1);
+		map.put(TOP,    Subaxis.Z_1);
+		map.put(LEFT,   Subaxis.X_2);
+		map.put(REAR,   Subaxis.Y_2);
+		map.put(BOTTOM, Subaxis.Z_2);
+		
+		return map;
+	}
+	
 }
 
 enum Axis {
@@ -39,7 +55,7 @@ enum Color {
 	
 	int colorCode;
 	
-	Color(int code) { this.colorCode = code;}
+	Color(int code) { this.colorCode = code; }
 	
 	static Color getColor(Subaxis axis) {
 		switch(axis){

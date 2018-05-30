@@ -1,11 +1,15 @@
 package rubix.structure;
 
 import java.util.Map;
+import java.util.HashMap;
+
+import static rubix.structure.Face.*;
 
 class Edge {
+
 	static class Block implements Cube.Block {
-		private Map<Direction, Subaxis> definition;
-		private Map<Subaxis, Cube.Block> adjBlocks;
+		private Map<Direction, Subaxis> definition = Direction.getDefaultDef();
+		private Map<Subaxis, Cube.Block> adjBlocks = new HashMap<>();
 
 		public Color getColor(Direction d)
 		{ return Color.getColor(definition.get(d)); }
@@ -36,6 +40,28 @@ class Edge {
 	
 	Direction direction;
 
+	Map<Direction, Direction> normToDir;
+	
+	Direction getDirection(Direction normal) {
+		Direction d = normToDir.get(normal);
+		if(d == null) {
+			throw new RuntimeException(
+			"Normal not in the visible sides of this edge"); 
+		}
+		return d;
+	}
+	
+	void setNormal(Direction normal) {
+		direction = getDirection(normal);
+		
+		if(start.getBlock(direction) == null) {
+			// change of orientation: swap ends
+			Corner temp = start;
+			start = end;
+			end = temp;
+		}
+	}
+
 	void setEnds(Corner start, Corner end)
 	{ this.start = start; this.end = end; }
 
@@ -54,11 +80,14 @@ class Edge {
 	}
 
 	void rotate(Direction normal, int nTurns) {
+		setNormal(normal);
+	
 		Direction oldDirection = direction;
 
 		// get plane directions
 		Direction[] dirs = Direction.getPlane(normal);
-
+		Direction[][] plane = Face.getPlaneDirs(direction);
+		
 		// normalize nTurns
 		while(nTurns < 0) nTurns += dirs.length;
 		nTurns %= dirs.length;
@@ -75,10 +104,15 @@ class Edge {
 			block.rotate(normal, nTurns);
 			block = next;
 		} while(block != end);
+		
+		normToDir.put(plane[X][NEG], direction);
+		normToDir.put(plane[Y][POS], Direction.getReverse(direction));
 	}
 
 	void putFace(Face face) {
 		Direction faceDirection = face.putEdge(this);
 		faces.put(faceDirection, face);
 	}
+	
+	Face getFace(Direction d) { return faces.get(d); }
 }
