@@ -7,5 +7,5 @@ class Corner extends Edge.Block {
 	
 	void putEdge(Direction dir, Edge e) { edges.put(dir, e); }
 	
-	Edge getEdge(Direction dir) { edges.get(dir); }
+	Edge getEdge(Direction dir) { return edges.get(dir); }
 }
