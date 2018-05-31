@@ -123,7 +123,7 @@ class Face {
 			faceBlock.getBlock(d)) {
 			faceBlock.putBlock(dirs[Y][POS], block);
 			block.putBlock(dirs[Y][NEG], faceBlock);
-		}
+		} 
 		
 		perimeter.put(dirs[Y][POS], e);
 		
