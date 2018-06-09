@@ -15,8 +15,8 @@ Design a data structure for the representation of a Rubik's cube such that all m
 ## Solution:
 
 ### _Observations:_
-- #1. The Rubik's cube is composed of smaller blocks.
-- #2. There are certain invariants that are needed to be considered:
+- The Rubik's cube is composed of smaller blocks.
+- There are certain invariants that are needed to be considered:
 	- The direction system for space in general.
 	- The relative position of adjacent faces on any block.
 	- The colors inscribed on the block
@@ -37,7 +37,7 @@ Design a data structure for the representation of a Rubik's cube such that all m
 	|REAR        | RIGHT        |
 	|RIGHT       | FRONT        |
 
-- #3. The Rubik's cube can also considered to composed of several substructures. In this
+- The Rubik's cube can also considered to composed of several substructures. In this
 case the Rubik's cube is composed of faces, edges and corners. Hence, every cube has 6 faces, 
 12 edges and 8 corners.
 
