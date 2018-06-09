@@ -17,7 +17,5 @@ public class Cube {
 		Color getColor(Direction d);
 	}
 	
-	private Map<Direction, Face> faces;
-	private Map<Direction, Edge[]> edges;
-	
+	private Map<Direction, Face> faces = new HashMap<>();
 }

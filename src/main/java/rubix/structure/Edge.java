@@ -5,12 +5,12 @@ import java.util.HashMap;
 
 import static rubix.structure.Face.*;
 
-class Edge {
+public class Edge {
 
 	static class Block implements Cube.Block {
-		private Edge parent;
+		private Edge parent; private int hash;
 		private Map<Subaxis, Cube.Block> adjBlocks = new HashMap<>();
-
+		
 		public Color getColor(Direction d)
 		{ return Color.getColor(parent.definition.get(d)); }
 
@@ -38,61 +38,69 @@ class Edge {
 			adjBlocks = adjBlocks_; 
 			this.parent = edge;
 		}
+		
+		@Override public int hashCode() { return hash; }
 	}
 
-	Corner start, end;
-	Map<Direction, Face> faces;
+	private static int BLOCKS_CREATED = 0;
+	private Corner start, end;
+	private Map<Direction, Face> faces = new HashMap<>();
 	
-	Direction direction;
+	private Direction axialDirection;
 
-	private Map<Direction, Direction> normToDir;
+	private Map<Direction, Direction> normToDir = new HashMap<>();
 	private Map<Direction, Subaxis> definition = Direction.getDefaultDef();
 	
-	Direction getDirection(Direction normal) {
+	public Corner getStart() { return start; }
+	public Corner   getEnd() { return   end; }
+	
+	public static Edge.Block newBlock(Edge edge) {
+		Edge.Block block = new Edge.Block();
+		block.parent = edge;
+		block.hash = Edge.BLOCKS_CREATED++;
+		return block;
+	}
+	
+	Direction getAxialDirection(Direction normal) {
 		Direction d = normToDir.get(normal);
 		if(d == null) {
 			throw new RuntimeException(
-			"Normal not in the visible sides of this edge"); 
+			"Normal not in the visible sides of this edge.");
 		}
 		return d;
 	}
 	
 	void setNormal(Direction normal) {
-		direction = getDirection(normal);
+		axialDirection = getAxialDirection(normal);
 		
-		if(start.getBlock(direction) == null) {
+		if(start.getBlock(axialDirection) == null) {
 			// change of orientation: swap ends
 			Corner temp = start;
-			start = end;
-			end = temp;
+			start = end; end = temp;
 		}
 	}
-
-	void setEnds(Corner start, Corner end)
-	{ this.start = start; this.end = end; }
-
+	
 	void allocate(int nBlocks) {
-		Direction reverse = Direction.getReverse(direction);
-
-		Cube.Block prev = start, curr = null; // curr moves ahead of q
+		Direction reverse = Direction.getReverse(axialDirection);
+		
+		Cube.Block prev = start, curr = null; 
+		
 		for(int i = 0; i < nBlocks; i++) {
-			curr = new Edge.Block();
-			prev.putBlock(direction, curr);
-			curr.putBlock(reverse, curr);
+			curr = Edge.newBlock(this);
+			prev.putBlock(axialDirection, curr);
+			curr.putBlock(reverse, prev);
 			prev = curr;
 		}
-		curr.putBlock(direction, end);
+		
+		curr.putBlock(axialDirection, end);
 		end.putBlock(reverse, curr);
 	}
 
 	void rotate(Direction normal, int nTurns) {
 		setNormal(normal);
 		
-		Direction oldDirection = direction;
-
 		// get plane directions
 		Direction[] dirs = Direction.getPlane(normal);
-		Direction[][] plane = Face.getPlaneDirs(direction);
 		Subaxis[] axes = new Subaxis[dirs.length];
 		// normalize nTurns
 		while(nTurns < 0) nTurns += dirs.length;
@@ -100,17 +108,23 @@ class Edge {
 
 		// set plane directions
 		int i = 0; for(; i < dirs.length; i++) {
-			if(direction == dirs[i]) break;
-		} direction = dirs[(i + nTurns) % dirs.length];
+			if(axialDirection == dirs[i]) break;
+		} axialDirection = dirs[(i + nTurns) % dirs.length];
 		
 		for(i = 0; i < axes.length; i++)
-			axes[(i + nTurns) % axes.length] = definition.get(dirs[i]);
+			axes[(i + nTurns) % dirs.length] = definition.get(dirs[i]);
 
 		for(i = 0; i < axes.length; i++)
 			definition.put(dirs[i], axes[i]);
 		
-		normToDir.put(plane[X][NEG], direction);
-		normToDir.put(plane[Y][POS], Direction.getReverse(direction));
+		// rotate the corners
+		start.rotate(normal, nTurns);
+		end.rotate(normal, nTurns);
+		
+		Direction otherNormal = dirs[(i + nTurns - 1) % dirs.length];
+		Direction reverse = Direction.getReverse(axialDirection);
+		normToDir.put(normal, axialDirection);
+		normToDir.put(otherNormal, reverse);
 	}
 
 	void putFace(Face face) {
@@ -119,4 +133,36 @@ class Edge {
 	}
 	
 	Face getFace(Direction d) { return faces.get(d); }
+	
+	static class Builder {
+		private Edge edge;
+		private int nBlocks;
+		
+		Builder() { reset(); }
+		
+		Builder reset() 
+		{ edge = new Edge(); nBlocks = 0; return this; }
+		
+		Builder setEnds(Corner start, Corner end)
+		{ edge.start = start; edge.end = end; return this; }
+		
+		Builder setAxialDirection(Direction normal, Direction d) { 
+			edge.normToDir.put(normal, d);
+			edge.setNormal(normal);
+			// link corners to this edge
+			edge.start.putEdge(edge.axialDirection, edge);
+			edge.end.putEdge(Direction
+				.getReverse(edge.axialDirection), edge); 
+			return this;
+		}
+		
+		Builder setLength(int nBlocks)
+		{ this.nBlocks = nBlocks; return this; }
+		
+		Edge build() { 
+			edge.allocate(nBlocks);
+			Edge edge_ = edge; 
+			reset(); return edge_; 
+		}
+	}
 }

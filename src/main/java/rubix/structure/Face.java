@@ -21,7 +21,7 @@ class Face {
 		public void putBlock(Direction d, Cube.Block b)
 		{ adjBlocks.put(parent.definition.get(d), b); }
 		
-		void joinParent(Face face) {
+		private void joinParent(Face face) {
 			Map<Subaxis, Subaxis> oldToNew = new HashMap<>();
 			for(Direction d : Direction.DIRECTIONS) {
 				oldToNew.put(parent.definition.get(d),
@@ -42,26 +42,14 @@ class Face {
 	} 
 
 	private Direction normal;
-	private Face.Block topLeft, topRight, bottomLeft, bottomRight;
-	private Map<Direction, Edge> perimeter;
+	private Map<Direction, Face.Block> corners;
+	private Map<Direction, Edge> perimeter = new HashMap<>();
 	private Map<Direction, Subaxis> definition = Direction.getDefaultDef();
 	
 	/* returns the corner of the face from which 
 	   an edge along this direction would start */
-	private Face.Block getCorner(Direction direction) {
-		Direction[][] dirs = Face.getPlaneDirs(normal);
-		
-		if(dirs[X][POS] == direction)
-			return topLeft;
-		else if(dirs[Y][NEG] == direction)
-			return topRight;
-		else if(dirs[X][NEG] == direction)
-			return bottomRight;
-		else if(dirs[Y][POS] == direction)
-			return bottomLeft;
-		else throw new RuntimeException("Given direction " +
-			direction + "is not along the perimeter of the face.");
-	}
+	Face.Block getCorner(Direction direction) 
+	{ return corners.get(direction); }
 	
 	static final int X = 0, Y = 1, POS = 0, NEG = 1;
 	static Direction[][] getPlaneDirs(Direction normal) {
@@ -74,6 +62,9 @@ class Face {
 	}
 	
 	void allocate(int order) {
+		
+		Face.Block topLeft = null,       topRight = null,
+		           bottomLeft = null, bottomRight = null;
 		
 		Direction[][] dirs = Face.getPlaneDirs(normal);
 		
@@ -111,15 +102,28 @@ class Face {
 		
 		bottomLeft  = currCH;
 		bottomRight = currCP;
+		
+		// assign corners to the directions at 
+		// the beginning of which they are placed 
+		corners.put(dirs[X][POS],     topLeft);
+		corners.put(dirs[Y][NEG],    topRight);
+		corners.put(dirs[X][NEG], bottomRight);
+		corners.put(dirs[Y][POS],  bottomLeft);
 	}
 	
 	Direction putEdge(Edge e) {
-		Direction d = e.getDirection(normal);
+		Direction d = e.getAxialDirection(normal);
+		
+		if(d == null) {
+			throw new RuntimeException(
+			"Given edge is not coplanar to this face.");
+		}
+		
 		Cube.Block faceBlock = getCorner(d);
 		Direction[][] dirs = Face.getPlaneDirs(d);
 		
-		for(Cube.Block block = e.start.getBlock(d);
-			block != e.end; block = block.getBlock(d),
+		for(Cube.Block block = e.getStart().getBlock(d);
+			block != e.getEnd(); block = block.getBlock(d),
 			faceBlock.getBlock(d)) {
 			faceBlock.putBlock(dirs[Y][POS], block);
 			block.putBlock(dirs[Y][NEG], faceBlock);
@@ -155,7 +159,7 @@ class Face {
 			edges[i] = perimeter.get(directions[i]);
 			edges[i].setNormal(normal);
 			adjFaces[i] = edges[i].getFace(inwardNorm);
-			normals[i] = edges[i].start.getEdge(inwardNorm);
+			normals[i] = edges[i].getStart().getEdge(inwardNorm);
 		}
 		
 		for(int i = 0; i < N_SIDES; i++) {
@@ -164,7 +168,13 @@ class Face {
 			edges[i].rotate(normal, nTurns);
 			edges[i].putFace(adjacentFace);
 			edges[i].putFace(this); 
-			edges[i].start.putEdge(inwardNorm, normals[next]);
+			edges[i].getStart().putEdge(inwardNorm, normals[next]);
 		}
+		
+		Face.Block[] corners_ = new Face.Block[N_SIDES];
+		for(int i = 0; i < N_SIDES; i++)
+			corners_[(i + nTurns) % axes.length] = corners.get(directions[i]);
+		for(int i = 0; i < N_SIDES; i++)
+			corners.put(directions[i], corners_[i]);
 	}
 }

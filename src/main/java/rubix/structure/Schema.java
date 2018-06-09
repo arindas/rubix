@@ -6,7 +6,8 @@ import java.util.HashMap;
 enum Direction { 
 	TOP, BOTTOM, RIGHT, LEFT, FRONT, REAR;
 	
-	static final Direction[] DIRECTIONS = {TOP, BOTTOM, RIGHT, LEFT, FRONT, REAR};
+	static final Direction[] DIRECTIONS = 
+		new Direction[]{TOP, BOTTOM, RIGHT, LEFT, FRONT, REAR};
 	
 	static Direction[] getPlane(Direction normal) {
 		switch(normal) {
@@ -20,10 +21,14 @@ enum Direction {
 	}
 	
 	static Direction getReverse(Direction d) {
-		int i = 0; for(; i < DIRECTIONS.length; i++) {
-			if(DIRECTIONS[i] == d) break;
-		} i = i % 2 == 0 ? i + 1: i - 1;
-		return DIRECTIONS[i];
+		switch(d) {
+			case RIGHT:  return LEFT;
+			case TOP:    return BOTTOM;
+			case FRONT:  return REAR;
+			case LEFT:   return RIGHT;
+			case BOTTOM: return TOP;
+			default:     return FRONT;
+		}
 	}
 	
 	static Map<Direction, Subaxis> getDefaultDef() {
@@ -45,15 +50,17 @@ enum Axis {
 }
 
 enum Subaxis {
-	X_1, X_2, Y_1, Y_2, Z_1, Z_2 ;
+	X_1, X_2, Y_1, Y_2, Z_1, Z_2;
 	
 	static final Subaxis[] SUBAXES = {X_1, X_2, Y_1, Y_2, Z_1, Z_2};
 }
 
 enum Color { 
-	RED(0xFF0000), GREEN(0x00FF00), YELLOW(0xFFFF00), BLUE(0x0000FF), ORANGE(0xFFA500), WHITE(0xFFFFFF) ;
+	RED(0xFF0000),    GREEN(0x00FF00),
+	YELLOW(0xFFFF00), BLUE(0x0000FF),
+	ORANGE(0xFFA500), WHITE(0xFFFFFF);
 	
-	int colorCode;
+	public final int colorCode;
 	
 	Color(int code) { this.colorCode = code; }
 	
