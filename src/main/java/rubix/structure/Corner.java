@@ -19,6 +19,9 @@ class Corner implements Cube.Block {
 
 	@Override public int hashCode() { return hash; }
 
+	public Map<Direction, Subaxis> getDef()
+		{ return new HashMap<>(definition); }
+
 	void putEdge(Direction dir, Edge e) { edges.put(dir, e); }
 	
 	Edge getEdge(Direction dir) { return edges.get(dir); }

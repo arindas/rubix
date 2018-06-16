@@ -28,14 +28,10 @@ public class EdgeTest {
 		edge.setNormal(normal);
 		
 		Cube.Block b = edge.getStart(); do {
-			System.out.println(b);
-			
 			assertEquals(b.getColor(Direction.FRONT),
 				Color.getColor(Subaxis.Y_1));
 			b = b.getBlock(edge
 				.getAxialDirection(Direction.FRONT));
-				
-			
 		} while(b != null);
 	}
 	
@@ -43,19 +39,15 @@ public class EdgeTest {
 	public void testRotation() {
 		Edge edge = buildEdge(6);
 		Direction normal = Direction.TOP;
-		int nTurns = 1;
-		edge.setNormal(normal);
-		System.out.println("Previous axial direction: "+
-			edge.getAxialDirection(normal));
-		edge.rotate(normal, nTurns);
-		System.out.println("After "+nTurns+
-			" turns\nCurrent axial direction: "+
-			edge.getAxialDirection(normal));
 		
+		int nTurns = 1;
+		
+		edge.setNormal(normal);
+		edge.rotate(normal, nTurns);
+
 		assertEquals(Direction.REAR, edge.getAxialDirection(normal));
 		
 		Cube.Block b = edge.getStart(); do {
-			System.out.println(b);
 			assertEquals(b.getColor(normal),
 				Color.getColor(Subaxis.Z_1));
 			b = b.getBlock(edge

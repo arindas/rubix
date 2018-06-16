@@ -1,6 +1,7 @@
 package rubix.structure;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.Collection;
 
@@ -10,7 +11,11 @@ class Face {
 
 	static class Block implements Cube.Block {
 		private Face parent;
+		private int hash;
 		private Map<Subaxis, Cube.Block> adjBlocks = new HashMap<>();
+		
+		@Override
+		public int hashCode() { return hash; }
 		
 		public Color getColor(Direction d)
 		{ return Color.getColor(parent.definition.get(d)); }
@@ -42,9 +47,18 @@ class Face {
 	} 
 
 	private Direction normal;
-	private Map<Direction, Face.Block> corners;
+	private int order;
+	private Map<Direction, Face.Block> corners = new HashMap<>();
 	private Map<Direction, Edge> perimeter = new HashMap<>();
 	private Map<Direction, Subaxis> definition = Direction.getDefaultDef();
+	
+	public int getOrder() { return order; }
+	
+	public Direction getNormal()
+		{ return normal; }
+		
+	public Map<Direction, Subaxis> getDef()
+		{ return new HashMap<>(definition); }
 	
 	/* returns the corner of the face from which 
 	   an edge along this direction would start */
@@ -61,9 +75,17 @@ class Face {
 		};
 	}
 	
-	void allocate(int order) {
+	private static int BLOCKS_CREATED = 0;
+	public static Face.Block newBlock(Face face) {
+		Face.Block block = new Face.Block();
+		block.parent = face;
+		block.hash = Face.BLOCKS_CREATED++;
+		return block;
+	}
+	
+	void allocate() {
 		
-		Face.Block topLeft = null,       topRight = null,
+		Face.Block topLeft    = null,    topRight = null,
 		           bottomLeft = null, bottomRight = null;
 		
 		Direction[][] dirs = Face.getPlaneDirs(normal);
@@ -76,7 +98,7 @@ class Face {
 			flank = null;
 			
 			for(int j = 0; j < order; j++) {
-				currCP = new Face.Block();
+				currCP = Face.newBlock(this);
 				currCP.joinParent(this);
 				currCP.putBlock(dirs[Y][POS], prevCP);
 				currCP.putBlock(dirs[X][NEG], flank);
@@ -110,30 +132,37 @@ class Face {
 		corners.put(dirs[X][NEG], bottomRight);
 		corners.put(dirs[Y][POS],  bottomLeft);
 	}
-	
-	Direction putEdge(Edge e) {
-		Direction d = e.getAxialDirection(normal);
-		
-		if(d == null) {
+
+	/* put an edge 'e' which is perpendicularly adjacent
+	   to this face in the direction 'perpD'. More clearly
+	   'perpD' is the direction perpendicular to the 
+	   axial direction of the edge and outwards relative 
+	   to the face */
+	void putEdge(Edge e, Direction perpD) {
+		if(e.getSize() != order) {
 			throw new RuntimeException(
-			"Given edge is not coplanar to this face.");
+			"Given edge does not fit at the side of this face.");
 		}
 		
+		e.setNormal(normal); // align the edge
+		Direction d = e.getAxialDirection(normal);
+		
 		Cube.Block faceBlock = getCorner(d);
-		Direction[][] dirs = Face.getPlaneDirs(d);
 		
 		for(Cube.Block block = e.getStart().getBlock(d);
 			block != e.getEnd(); block = block.getBlock(d),
 			faceBlock.getBlock(d)) {
-			faceBlock.putBlock(dirs[Y][POS], block);
-			block.putBlock(dirs[Y][NEG], faceBlock);
+			faceBlock.putBlock(perpD, block);
+			block.putBlock(Direction
+				.getReverse(perpD), faceBlock);
 		} 
 		
-		perimeter.put(dirs[Y][POS], e);
+		perimeter.put(perpD, e);
 		
-		// return the direction of the
+		// put the direction of the
 		// plane relative to the edge
-		return dirs[Y][NEG];
+		e.putFace(this, Direction
+			.getReverse(perpD));
 	}
 	
 	void rotate(int nTurns) {
@@ -166,8 +195,7 @@ class Face {
 			int next = (i + nTurns) % N_SIDES;
 			Face adjacentFace = adjFaces[next];
 			edges[i].rotate(normal, nTurns);
-			edges[i].putFace(adjacentFace);
-			edges[i].putFace(this); 
+			adjacentFace.putEdge(edges[i], normal);
 			edges[i].getStart().putEdge(inwardNorm, normals[next]);
 		}
 		
@@ -176,5 +204,36 @@ class Face {
 			corners_[(i + nTurns) % axes.length] = corners.get(directions[i]);
 		for(int i = 0; i < N_SIDES; i++)
 			corners.put(directions[i], corners_[i]);
+	}
+	
+	static class Builder {
+		private Face face;
+		private int order;
+		private Direction normal;
+		
+		Builder() { reset(); } 
+		
+		Builder reset() {
+			face = null; 
+			// default parameters
+			order = 3;
+			normal = Direction.TOP;
+			return this; 
+		}
+		
+		Builder setOrder(int order) 
+			{ this.order = order; return this; }
+		
+		Builder setNormal(Direction normal) 
+			{ this.normal = normal; return this; }
+		
+		Face build() {
+			face = new Face();
+			face.normal = normal;
+			face.order = order;
+			face.allocate();
+			Face face_ = face;
+			reset(); return face_;
+		}
 	}
 }

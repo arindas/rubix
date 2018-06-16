@@ -43,7 +43,8 @@ public class Edge {
 	}
 
 	private static int BLOCKS_CREATED = 0;
-	private Corner start, end;
+	private Corner start, end; 
+	private int size;
 	private Map<Direction, Face> faces = new HashMap<>();
 	
 	private Direction axialDirection;
@@ -53,6 +54,11 @@ public class Edge {
 	
 	public Corner getStart() { return start; }
 	public Corner   getEnd() { return   end; }
+	
+	public Map<Direction, Subaxis> getDef()
+		{ return new HashMap<>(definition); }
+	
+	public int getSize() { return size; }
 	
 	public static Edge.Block newBlock(Edge edge) {
 		Edge.Block block = new Edge.Block();
@@ -73,19 +79,20 @@ public class Edge {
 	void setNormal(Direction normal) {
 		axialDirection = getAxialDirection(normal);
 		
-		if(start.getBlock(axialDirection) == null) {
+		if(!normToDir.isEmpty() &&
+			start.getBlock(axialDirection) == null) {
 			// change of orientation: swap ends
 			Corner temp = start;
 			start = end; end = temp;
 		}
 	}
 	
-	void allocate(int nBlocks) {
+	void allocate() {
 		Direction reverse = Direction.getReverse(axialDirection);
 		
 		Cube.Block prev = start, curr = null; 
 		
-		for(int i = 0; i < nBlocks; i++) {
+		for(int i = 0; i < size; i++) {
 			curr = Edge.newBlock(this);
 			prev.putBlock(axialDirection, curr);
 			curr.putBlock(reverse, prev);
@@ -127,8 +134,7 @@ public class Edge {
 		normToDir.put(otherNormal, reverse);
 	}
 
-	void putFace(Face face) {
-		Direction faceDirection = face.putEdge(this);
+	void putFace(Face face, Direction faceDirection) {
 		faces.put(faceDirection, face);
 	}
 	
@@ -160,7 +166,8 @@ public class Edge {
 		{ this.nBlocks = nBlocks; return this; }
 		
 		Edge build() { 
-			edge.allocate(nBlocks);
+			edge.size = nBlocks;
+			edge.allocate();
 			Edge edge_ = edge; 
 			reset(); return edge_; 
 		}

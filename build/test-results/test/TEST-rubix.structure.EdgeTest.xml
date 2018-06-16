@@ -1,27 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="rubix.structure.EdgeTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2018-06-09T15:19:28" hostname="arubox" time="0.036">
+<testsuite name="rubix.structure.EdgeTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2018-06-16T06:33:39" hostname="arubox" time="0.008">
   <properties/>
-  <testcase name="testComposition" classname="rubix.structure.EdgeTest" time="0.009"/>
-  <testcase name="testRotation" classname="rubix.structure.EdgeTest" time="0.027"/>
+  <testcase name="testComposition" classname="rubix.structure.EdgeTest" time="0.007"/>
+  <testcase name="testRotation" classname="rubix.structure.EdgeTest" time="0.0"/>
   <testcase name="testAllocation" classname="rubix.structure.EdgeTest" time="0.0"/>
-  <system-out><![CDATA[rubix.structure.Corner@1
-rubix.structure.Edge$Block@4
-rubix.structure.Edge$Block@3
-rubix.structure.Edge$Block@2
-rubix.structure.Edge$Block@1
-rubix.structure.Edge$Block@0
-rubix.structure.Corner@0
-Previous axial direction: LEFT
-After 1 turns
-Current axial direction: REAR
-rubix.structure.Corner@2
-rubix.structure.Edge$Block@5
-rubix.structure.Edge$Block@6
-rubix.structure.Edge$Block@7
-rubix.structure.Edge$Block@8
-rubix.structure.Edge$Block@9
-rubix.structure.Edge$Block@a
-rubix.structure.Corner@3
-]]></system-out>
+  <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
